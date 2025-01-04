@@ -54,6 +54,7 @@ export const signup = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("error in signup ", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -89,7 +90,7 @@ export const verifyEmail = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("error in verifyEmail ", error);
+    console.error("error in verifyEmail ", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -124,7 +125,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("Error in login ", error);
+    console.error("Error in login ", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -165,16 +166,15 @@ export const forgotPassword = async (req, res) => {
       message: "Password reset link sent to your email",
     });
   } catch (error) {
-    console.log("Error in forgotPassword ", error);
+    console.error("Error in forgotPassword ", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
 export const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
   try {
-    const { token } = req.params;
-    const { password } = req.body;
-
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpiresAt: { $gt: Date.now() },
@@ -200,7 +200,23 @@ export const resetPassword = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
-    console.log("Error in resetPassword ", error);
+    console.error("Error in resetPassword ", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error("Error in checkAuth ", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
